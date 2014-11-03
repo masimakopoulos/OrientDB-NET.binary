@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace Orient.Client.Protocol
@@ -60,12 +58,12 @@ namespace Orient.Client.Protocol
 
         public static string ReadInt32PrefixedString(this BinaryReader binRdr)
         {
-            int length = binRdr.ReadInt32EndianAware();
+            var length = binRdr.ReadInt32EndianAware();
 
             if (length < 0)
               return null;
 
-            return System.Text.Encoding.Default.GetString(binRdr.ReadBytes(length));
+            return Encoding.Default.GetString(binRdr.ReadBytes(length));
         }
     }
 }

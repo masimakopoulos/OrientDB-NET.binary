@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Orient.Client
+namespace Orient.Client.API
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class OProperty : Attribute

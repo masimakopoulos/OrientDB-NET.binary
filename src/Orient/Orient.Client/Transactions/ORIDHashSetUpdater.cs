@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Transactions
 {

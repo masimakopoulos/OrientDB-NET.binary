@@ -1,43 +1,28 @@
 ﻿using System;
-using System.Reflection;
 
-namespace Orient.Client
+namespace Orient.Client.API.Types
 {
     public class OEdge : ODocument
     {
+        public OEdge() {
+            OClassName = "E";
+        }
+
         [OProperty(Alias = "in", Serializable = false)]
-        public ORID InV
-        {
-            get
-            {
-                return this.GetField<ORID>("in");
-            }
+        public ORID InV {
+            get { return GetField<ORID>("in"); }
         }
 
         [OProperty(Alias = "out", Serializable = false)]
-        public ORID OutV
-        {
-            get
-            {
-                return this.GetField<ORID>("out");
-            }
+        public ORID OutV {
+            get { return GetField<ORID>("out"); }
         }
 
         [OProperty(Alias = "label", Serializable = false)]
-        public string Label 
-        {
-            get
-            {
-                string label = this.GetField<string>("@OClassName");
-
-                if (string.IsNullOrEmpty(label))
-                {
-                    return this.GetType().Name;
-                }
-                else
-                {
-                    return label;
-                }
+        public string Label {
+            get {
+                var label = GetField<string>("@OClassName");
+                return String.IsNullOrEmpty(label) ? GetType().Name : label;
             }
         }
     }

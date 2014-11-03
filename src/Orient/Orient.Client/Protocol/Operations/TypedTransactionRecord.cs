@@ -1,4 +1,6 @@
-﻿namespace Orient.Client.Protocol.Operations
+﻿using Orient.Client.API.Types;
+
+namespace Orient.Client.Protocol.Operations
 {
     class TypedTransactionRecord<T> : TransactionRecord where T : IBaseRecord
     {

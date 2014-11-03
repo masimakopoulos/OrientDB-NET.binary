@@ -1,6 +1,4 @@
-﻿using Orient.Client;
-
-namespace Orient.Client
+﻿namespace Orient.Client.API.Types
 {
     public abstract class OBaseRecord : IBaseRecord
     {

@@ -1,18 +1,20 @@
-﻿using Orient.Client.Protocol;
+﻿using Orient.Client.API.Types;
+using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
-using Orient.Client.Protocol.Operations.Command;
 
 // syntax:
 // DELETE VERTEX <rid>|<[<class>] 
 // [WHERE <conditions>] 
 // [LIMIT <MaxRecords>>]
+using Orient.Client.Protocol.Operations.Command;
+using Orient.Client.Protocol.Query;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
     public class OSqlDeleteVertex
     {
-        private SqlQuery _sqlQuery = new SqlQuery();
-        private Connection _connection;
+        private readonly SqlQuery _sqlQuery = new SqlQuery();
+        private readonly Connection _connection;
 
         public OSqlDeleteVertex()
         {
@@ -161,14 +163,14 @@ namespace Orient.Client
 
         public int Run()
         {
-            CommandPayloadCommand payload = new CommandPayloadCommand();
-            payload.Text = ToString();
+            var payload = new CommandPayloadCommand {Text = ToString()};
 
-            Command operation = new Command();
-            operation.OperationMode = OperationMode.Synchronous;
-            operation.CommandPayload = payload;
+            var operation = new Command {
+                OperationMode = OperationMode.Synchronous,
+                CommandPayload = payload
+            };
 
-            OCommandResult result = new OCommandResult(_connection.ExecuteOperation(operation));
+            var result = new OCommandResult(_connection.ExecuteOperation(operation));
 
             return int.Parse(result.ToDocument().GetField<string>("Content"));
         }

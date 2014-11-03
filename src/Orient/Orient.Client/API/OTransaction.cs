@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Orient.Client.API.Types;
 using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
 using Orient.Client.Transactions;
 
 namespace Orient.Client.API
 {
-  
-
     public class OTransaction
     {
         private readonly Connection _connection;
@@ -27,9 +25,9 @@ namespace Orient.Client.API
 
         public void Commit()
         {
-            CommitTransaction ct = new CommitTransaction(_records.Values.ToList(), _connection.Database);
+            var ct = new CommitTransaction(_records.Values.ToList(), _connection.Database);
             var result = _connection.ExecuteOperation(ct);
-            Dictionary<ORID, ORID> mapping = result.GetField<Dictionary<ORID, ORID>>("CreatedRecordMapping");
+            var mapping = result.GetField<Dictionary<ORID, ORID>>("CreatedRecordMapping");
 
             var survivingRecords = _records.Values.Where(x => x.RecordType != RecordType.Delete).ToList();
 
@@ -92,8 +90,8 @@ namespace Orient.Client.API
 
         private void Insert(TransactionRecord record)
         {
-            bool hasOrid = record.ORID != null;
-            bool needsOrid = record.RecordType != RecordType.Create;
+            var hasOrid = record.ORID != null;
+            var needsOrid = record.RecordType != RecordType.Create;
 
             if (hasOrid && !needsOrid)
                 throw new InvalidOperationException("Objects to be added via a transaction must not already be in the database");

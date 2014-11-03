@@ -2,6 +2,7 @@
 {
     internal enum OperationType
     {
+// ReSharper disable InconsistentNaming
         SHUTDOWN = 1,
         CONNECT = 2,
         DB_OPEN = 3,
@@ -9,7 +10,7 @@
         DB_CLOSE = 5,
         DB_EXIST = 6,
         DB_DROP = 7,
-        DB_SIZE = 8,
+        DB_SIZE	= 8,
         DB_COUNTRECORDS = 9,
         DATACLUSTER_ADD = 10,
         DATACLUSTER_DROP = 11,
@@ -30,5 +31,6 @@
         CONFIG_LIST = 72,
         DB_RELOAD = 73,
         DB_LIST = 74
+// ReSharper restore InconsistentNaming
     }
 }

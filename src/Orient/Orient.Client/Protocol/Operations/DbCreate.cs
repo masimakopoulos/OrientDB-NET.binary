@@ -1,45 +1,38 @@
-﻿using System.Linq;
-using Orient.Client.Protocol.Serializers;
+﻿using Orient.Client.API;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
     internal class DbCreate : IOperation
     {
-        internal string DatabaseName { get; set; }
-        internal ODatabaseType DatabaseType { get; set; }
-        internal OStorageType StorageType { get; set; }
+        internal string DatabaseName { private get; set; }
+        internal ODatabaseType DatabaseType { private get; set; }
+        internal OStorageType StorageType { private get; set; }
 
-        public Request Request(int sessionID)
+        public Request Request(int sessionId)
         {
-            Request request = new Request();
+            var request = new Request();
             // standard request fields
-            request.DataItems.Add(new RequestDataItem() { Type = "byte", Data = BinarySerializer.ToArray((byte)OperationType.DB_CREATE) });
-            request.DataItems.Add(new RequestDataItem() { Type = "int", Data = BinarySerializer.ToArray(sessionID) });
+            request.AddDataItem((byte)OperationType.DB_CREATE);
+            request.AddDataItem(sessionId);
             // operation specific fields
-            request.DataItems.Add(new RequestDataItem() { Type = "string", Data = BinarySerializer.ToArray(DatabaseName) });
-            request.DataItems.Add(new RequestDataItem() { Type = "string", Data = BinarySerializer.ToArray(DatabaseType.ToString().ToLower()) });
-            request.DataItems.Add(new RequestDataItem() { Type = "string", Data = BinarySerializer.ToArray(StorageType.ToString().ToLower()) });
+            request.AddDataItem(DatabaseName);
+            request.AddDataItem(DatabaseType.ToString().ToLower());
+            request.AddDataItem(StorageType.ToString().ToLower());
 
             return request;
         }
 
         public ODocument Response(Response response)
         {
-            ODocument document = new ODocument();
+            var document = new ODocument();
 
             if (response == null)
             {
                 return document;
             }
 
-            if (response.Status == ResponseStatus.OK)
-            {
-                document.SetField("IsCreated", true);
-            }
-            else
-            {
-                document.SetField("IsCreated", true);
-            }
+            document.SetField("IsCreated", response.Status == ResponseStatus.OK);
 
             return document;
         }

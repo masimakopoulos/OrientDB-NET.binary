@@ -1,36 +1,34 @@
-﻿using Orient.Client.Protocol;
+﻿using Orient.Client.API.Types;
+using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
-using Orient.Client.Protocol.Operations.Command;
 
 // shorthand for INSERT INTO for documents
+using Orient.Client.Protocol.Operations.Command;
+using Orient.Client.Protocol.Query;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
     public class OSqlCreateDocument
     {
-        private SqlQuery _sqlQuery = new SqlQuery();
-        private Connection _connection;
+        private readonly SqlQuery _sqlQuery = new SqlQuery();
+        private readonly Connection _connection;
 
-        public OSqlCreateDocument()
-        {
+        public OSqlCreateDocument() {
         }
 
-        internal OSqlCreateDocument(Connection connection)
-        {
+        internal OSqlCreateDocument(Connection connection) {
             _connection = connection;
         }
 
         #region Document
 
-        public OSqlCreateDocument Document(string className)
-        {
+        public OSqlCreateDocument Document(string className) {
             _sqlQuery.Class(className);
 
             return this;
         }
 
-        public OSqlCreateDocument Document<T>(T obj)
-        {
+        public OSqlCreateDocument Document<T>(T obj) {
             // check for OClassName shouldn't have be here since INTO clause might specify it
 
             _sqlQuery.Insert(obj);
@@ -38,8 +36,7 @@ namespace Orient.Client
             return this;
         }
 
-        public OSqlCreateDocument Document<T>()
-        {
+        public OSqlCreateDocument Document<T>() {
             return Document(typeof(T).Name);
         }
 
@@ -47,15 +44,13 @@ namespace Orient.Client
 
         #region Cluster
 
-        public OSqlCreateDocument Cluster(string clusterName)
-        {
+        public OSqlCreateDocument Cluster(string clusterName) {
             _sqlQuery.Cluster(clusterName);
 
             return this;
         }
 
-        public OSqlCreateDocument Cluster<T>()
-        {
+        public OSqlCreateDocument Cluster<T>() {
             return Cluster(typeof(T).Name);
         }
 
@@ -63,15 +58,13 @@ namespace Orient.Client
 
         #region Set
 
-        public OSqlCreateDocument Set<T>(string fieldName, T fieldValue)
-        {
+        public OSqlCreateDocument Set<T>(string fieldName, T fieldValue) {
             _sqlQuery.Set<T>(fieldName, fieldValue);
 
             return this;
         }
 
-        public OSqlCreateDocument Set<T>(T obj)
-        {
+        public OSqlCreateDocument Set<T>(T obj) {
             _sqlQuery.Set(obj);
 
             return this;
@@ -81,29 +74,26 @@ namespace Orient.Client
 
         #region Run
 
-        public ODocument Run()
-        {
-            CommandPayloadCommand payload = new CommandPayloadCommand();
-            payload.Text = ToString();
+        public ODocument Run() {
+            var payload = new CommandPayloadCommand {Text = ToString()};
 
-            Command operation = new Command();
-            operation.OperationMode = OperationMode.Synchronous;
-            operation.CommandPayload = payload;
+            var operation = new Command {
+                OperationMode = OperationMode.Synchronous,
+                CommandPayload = payload
+            };
 
-            OCommandResult result = new OCommandResult(_connection.ExecuteOperation(operation));
+            var result = new OCommandResult(_connection.ExecuteOperation(operation));
 
             return result.ToSingle();
         }
 
-        public T Run<T>() where T : class, new()
-        {
+        public T Run<T>() where T : class, new() {
             return Run().To<T>();
         }
 
         #endregion
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return _sqlQuery.ToString(QueryType.Insert);
         }
     }

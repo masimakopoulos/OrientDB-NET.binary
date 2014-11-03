@@ -1,5 +1,5 @@
-﻿using System.Linq;
-using Orient.Client.Protocol.Serializers;
+﻿using Orient.Client.API;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
@@ -8,16 +8,16 @@ namespace Orient.Client.Protocol.Operations
         internal string DatabaseName { get; set; }
         internal OStorageType StorageType { get; set; }
 
-        public Request Request(int sessionID)
+        public Request Request(int sessionId)
         {
-            Request request = new Request();
+            var request = new Request();
             // standard request fields
-            request.DataItems.Add(new RequestDataItem() { Type = "byte", Data = BinarySerializer.ToArray((byte)OperationType.DB_DROP) });
-            request.DataItems.Add(new RequestDataItem() { Type = "int", Data = BinarySerializer.ToArray(sessionID) });
+            request.AddDataItem((byte) OperationType.DB_DROP);
+            request.AddDataItem(sessionId);
             // operation specific fields
-            request.DataItems.Add(new RequestDataItem() { Type = "string", Data = BinarySerializer.ToArray(DatabaseName) });
-            if (OClient.ProtocolVersion >= 16) //since 1.5 snapshot but not in 1.5
-                request.DataItems.Add(new RequestDataItem() { Type = "string", Data = BinarySerializer.ToArray(StorageType.ToString().ToLower()) });
+            request.AddDataItem(DatabaseName);
+            if (ServerInfo.ProtocolVersion >= 16) //since 1.5 snapshot but not in 1.5
+                request.AddDataItem(StorageType.ToString().ToLower());
 
             return request;
         }

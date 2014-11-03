@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using Orient.Client.API.Exceptions;
+using Orient.Client.API.Types;
 using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
-using Orient.Client.Protocol.Operations.Command;
 
 // syntax: 
 // CREATE EDGE [<class>] 
@@ -9,71 +10,62 @@ using Orient.Client.Protocol.Operations.Command;
 // FROM <rid>|(<query>)|[<rid>]* 
 // TO <rid>|(<query>)|[<rid>]* 
 // [SET <field> = <expression>[,]*]
+using Orient.Client.Protocol.Operations.Command;
+using Orient.Client.Protocol.Query;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
-    public interface OSqlCreateEdge
+    public interface IOSqlCreateEdge
     {
-        OSqlCreateEdge Edge(string className);
-        OSqlCreateEdge Edge<T>(T obj);
-        OSqlCreateEdge Edge<T>();
-        OSqlCreateEdge Cluster(string clusterName);
-        OSqlCreateEdge Cluster<T>();
-        OSqlCreateEdge From(ORID orid);
-        OSqlCreateEdge From<T>(T obj);
-        OSqlCreateEdge To(ORID orid);
-        OSqlCreateEdge To<T>(T obj);
-        OSqlCreateEdge Set<T>(string fieldName, T fieldValue);
-        OSqlCreateEdge Set<T>(T obj);
+        IOSqlCreateEdge Edge(string className);
+        IOSqlCreateEdge Edge<T>(T obj);
+        IOSqlCreateEdge Edge<T>();
+        IOSqlCreateEdge Cluster(string clusterName);
+        IOSqlCreateEdge Cluster<T>();
+        IOSqlCreateEdge From(ORID orid);
+        IOSqlCreateEdge From<T>(T obj);
+        IOSqlCreateEdge To(ORID orid);
+        IOSqlCreateEdge To<T>(T obj);
+        IOSqlCreateEdge Set<T>(string fieldName, T fieldValue);
+        IOSqlCreateEdge Set<T>(T obj);
         OEdge Run();
         T Run<T>() where T : class, new();
         string ToString();
     }
 
-    public class OSqlCreateEdgeViaSql : OSqlCreateEdge
+    public class ΟSqlCreateEdgeViaSql : IOSqlCreateEdge
     {
-        private SqlQuery _sqlQuery = new SqlQuery();
-        private Connection _connection;
+        private readonly SqlQuery _sqlQuery = new SqlQuery();
+        private readonly Connection _connection;
 
-        public OSqlCreateEdgeViaSql()
-        {
+        public ΟSqlCreateEdgeViaSql() {
         }
 
-        internal OSqlCreateEdgeViaSql(Connection connection)
-        {
+        internal ΟSqlCreateEdgeViaSql(Connection connection) {
             _connection = connection;
         }
 
         #region Edge
 
-        public OSqlCreateEdge Edge(string className)
-        {
+        public IOSqlCreateEdge Edge(string className) {
             _sqlQuery.Edge(className);
 
             return this;
         }
 
-        public OSqlCreateEdge Edge<T>(T obj)
-        {
+        public IOSqlCreateEdge Edge<T>(T obj) {
             ODocument document;
 
-            if (obj is ODocument)
-            {
+            if (obj is ODocument) {
                 document = obj as ODocument;
             }
-            else
-            {
+            else {
                 document = ODocument.ToDocument(obj);
             }
 
-            string className = document.OClassName;
-
-            if (typeof(T) == typeof(OEdge))
-            {
-                className = "E";
-            }
-            else if (string.IsNullOrEmpty(document.OClassName))
-            {
+            var className = document.OClassName;
+            
+            if (String.IsNullOrEmpty(document.OClassName)) {
                 throw new OException(OExceptionType.Query, "Document doesn't contain OClassName value.");
             }
 
@@ -83,53 +75,45 @@ namespace Orient.Client
             return this;
         }
 
-        public OSqlCreateEdge Edge<T>()
-        {
-            return Edge(typeof(T).Name);
+        public IOSqlCreateEdge Edge<T>() {
+            return Edge(typeof (T).Name);
         }
 
         #endregion
 
         #region Cluster
 
-        public OSqlCreateEdge Cluster(string clusterName)
-        {
+        public IOSqlCreateEdge Cluster(string clusterName) {
             _sqlQuery.Cluster(clusterName);
 
             return this;
         }
 
-        public OSqlCreateEdge Cluster<T>()
-        {
-            return Cluster(typeof(T).Name);
+        public IOSqlCreateEdge Cluster<T>() {
+            return Cluster(typeof (T).Name);
         }
 
         #endregion
 
         #region From
 
-        public OSqlCreateEdge From(ORID orid)
-        {
+        public IOSqlCreateEdge From(ORID orid) {
             _sqlQuery.From(orid);
 
             return this;
         }
 
-        public OSqlCreateEdge From<T>(T obj)
-        {
+        public IOSqlCreateEdge From<T>(T obj) {
             ODocument document;
 
-            if (obj is ODocument)
-            {
+            if (obj is ODocument) {
                 document = obj as ODocument;
             }
-            else
-            {
+            else {
                 document = ODocument.ToDocument(obj);
             }
 
-            if (document.ORID == null)
-            {
+            if (document.ORID == null) {
                 throw new OException(OExceptionType.Query, "Document doesn't contain ORID value.");
             }
 
@@ -142,28 +126,23 @@ namespace Orient.Client
 
         #region To
 
-        public OSqlCreateEdge To(ORID orid)
-        {
+        public IOSqlCreateEdge To(ORID orid) {
             _sqlQuery.To(orid);
 
             return this;
         }
 
-        public OSqlCreateEdge To<T>(T obj)
-        {
+        public IOSqlCreateEdge To<T>(T obj) {
             ODocument document;
 
-            if (obj is ODocument)
-            {
+            if (obj is ODocument) {
                 document = obj as ODocument;
             }
-            else
-            {
+            else {
                 document = ODocument.ToDocument(obj);
             }
-            
-            if (document.ORID == null)
-            {
+
+            if (document.ORID == null) {
                 throw new OException(OExceptionType.Query, "Document doesn't contain ORID value.");
             }
 
@@ -176,15 +155,13 @@ namespace Orient.Client
 
         #region Set
 
-        public OSqlCreateEdge Set<T>(string fieldName, T fieldValue)
-        {
-            _sqlQuery.Set<T>(fieldName, fieldValue);
+        public IOSqlCreateEdge Set<T>(string fieldName, T fieldValue) {
+            _sqlQuery.Set(fieldName, fieldValue);
 
             return this;
         }
 
-        public OSqlCreateEdge Set<T>(T obj)
-        {
+        public IOSqlCreateEdge Set<T>(T obj) {
             _sqlQuery.Set(obj);
 
             return this;
@@ -194,29 +171,28 @@ namespace Orient.Client
 
         #region Run
 
-        public OEdge Run()
-        {
-            CommandPayloadCommand payload = new CommandPayloadCommand();
-            payload.Text = ToString();
+        public OEdge Run() {
+            var payload = new CommandPayloadCommand() {
+                Text = ToString()
+            };
 
-            Command operation = new Command();
-            operation.OperationMode = OperationMode.Synchronous;
-            operation.CommandPayload = payload;
+            var operation = new Command {
+                OperationMode = OperationMode.Synchronous,
+                CommandPayload = payload
+            };
 
-            OCommandResult result = new OCommandResult(_connection.ExecuteOperation(operation));
+            var result = new OCommandResult(_connection.ExecuteOperation(operation));
 
             return result.ToSingle().To<OEdge>();
         }
 
-        public T Run<T>() where T : class, new()
-        {
+        public T Run<T>() where T : class, new() {
             return Run().To<T>();
         }
 
         #endregion
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return _sqlQuery.ToString(QueryType.CreateEdge);
         }
     }

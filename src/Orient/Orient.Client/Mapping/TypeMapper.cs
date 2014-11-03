@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Mapping
 {
@@ -12,10 +10,9 @@ namespace Orient.Client.Mapping
         public abstract void ToObject(ODocument document, object typedObject);
         public abstract ODocument ToDocument(object typedObject);
 
-        public static TypeMapperBase GetInstanceFor(Type t)
-        {
-            var mappingType = typeof(TypeMapper<>).MakeGenericType(t);
-            PropertyInfo propertyInfo = mappingType.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public);
+        public static TypeMapperBase GetInstanceFor(Type t) {
+            var mappingType = typeof (TypeMapper<>).MakeGenericType(t);
+            var propertyInfo = mappingType.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public);
             return (TypeMapperBase) propertyInfo.GetValue(null, null);
         }
 
@@ -24,39 +21,29 @@ namespace Orient.Client.Mapping
 
     public class TypeMapper<T> : TypeMapperBase
     {
+        public static TypeMapper<T> Instance { get; private set; }
 
+        private readonly List<IFieldMapping> _fields = new List<IFieldMapping>();
 
-        private static readonly TypeMapper<T> _instance = new TypeMapper<T>();
-        public static TypeMapper<T> Instance { get { return _instance; } }
-
-        readonly List<IFieldMapping> _fields = new List<IFieldMapping>();
-
-      
-
-
-        private TypeMapper()
-        {
-            Type genericObjectType = typeof (T);
+        private TypeMapper() {
+            var genericObjectType = typeof (T);
 
             if (genericObjectType.Name.Equals("ODocument") ||
                 genericObjectType.Name.Equals("OVertex") ||
-                genericObjectType.Name.Equals("OEdge"))
-            {
+                genericObjectType.Name.Equals("OEdge")) {
                 _fields.Add(new AllFieldMapping<T>());
                 return;
             }
 
-            
-            foreach (PropertyInfo propertyInfo in genericObjectType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-            {
+
+            foreach (var propertyInfo in genericObjectType.GetProperties(BindingFlags.Public | BindingFlags.Instance)) {
                 if (!propertyInfo.CanRead || !propertyInfo.CanWrite)
                     continue; // read only or write only properties can be ignored
 
-                string propertyName = propertyInfo.Name;
+                var propertyName = propertyInfo.Name;
 
                 // serialize orient specific fields into dedicated properties
-                switch (propertyName)
-                {
+                switch (propertyName) {
                     case "ORID":
                         _fields.Add(new ORIDFieldMapping<T>(propertyInfo));
                         continue;
@@ -74,78 +61,71 @@ namespace Orient.Client.Mapping
                         continue;
                 }
 
-
                 var oProperty = propertyInfo.GetOPropertyAttribute();
-
-                if (oProperty != null)
-                {
+                if (oProperty != null) {
                     if (!oProperty.Deserializable)
                         continue;
                     propertyName = oProperty.Alias;
                 }
 
-                string fieldPath = propertyName;
+                var fieldPath = propertyName;
 
-                if (propertyInfo.PropertyType.IsArray)
-                {
+                if (propertyInfo.PropertyType.IsArray) {
                     _fields.Add(new ArrayNamedFieldMapping<T>(propertyInfo, fieldPath));
                 }
-                else if (propertyInfo.PropertyType.IsGenericType)
-                {
+                else if (propertyInfo.PropertyType.IsGenericType) {
                     if (propertyInfo.PropertyType.Name.StartsWith("List"))
                         _fields.Add(new ListNamedFieldMapping<T>(propertyInfo, fieldPath));
                     else if (propertyInfo.PropertyType.Name.StartsWith("HashSet"))
                         _fields.Add(new HashSetNamedFieldMapping<T>(propertyInfo, fieldPath));
                     else
-                        throw new NotImplementedException("No mapping implemented for type " + propertyInfo.PropertyType.Name);
+                        throw new NotImplementedException("No mapping implemented for type " +
+                                                          propertyInfo.PropertyType.Name);
                 }
                     // property is class except the string or ORID type since string and ORID values are parsed differently
                 else if (propertyInfo.PropertyType.IsClass &&
                          (propertyInfo.PropertyType.Name != "String") &&
-                         (propertyInfo.PropertyType.Name != "ORID"))
-                {
+                         (propertyInfo.PropertyType.Name != "ORID")) {
                     AddClassProperty(propertyInfo, fieldPath);
                 }
                     // property is basic type
-                else
-                {
+                else {
                     AddBasicProperty(propertyInfo, fieldPath);
                 }
             }
 
         }
 
-        private void AddBasicProperty(PropertyInfo propertyInfo, string fieldPath)
-        {
+        static TypeMapper() {
+            Instance = new TypeMapper<T>();
+        }
+
+        private void AddBasicProperty(PropertyInfo propertyInfo, string fieldPath) {
             _fields.Add(new BasicNamedFieldMapping<T>(propertyInfo, fieldPath));
         }
 
-        private void AddClassProperty(PropertyInfo propertyInfo, string fieldPath)
-        {
-            var mappingType = typeof (ClassFieldMapping<,>).MakeGenericType(propertyInfo.PropertyType, typeof(T));
+        private void AddClassProperty(PropertyInfo propertyInfo, string fieldPath) {
+            var mappingType = typeof (ClassFieldMapping<,>).MakeGenericType(propertyInfo.PropertyType, typeof (T));
             _fields.Add((IFieldMapping) Activator.CreateInstance(mappingType, propertyInfo, fieldPath));
         }
 
 
-        public void ToObject(ODocument document, T typedObject)
-        {
+        public void ToObject(ODocument document, T typedObject) {
             foreach (var fm in _fields)
                 fm.MapToObject(document, typedObject);
         }
 
-        public override void ToObject(ODocument document, object typedObject)
-        {
-            ToObject(document, (T)typedObject);
+        public override void ToObject(ODocument document, object typedObject) {
+            ToObject(document, (T) typedObject);
         }
 
-        public override ODocument ToDocument(object genericObject)
-        {
-            ODocument document = new ODocument();
+        public override ODocument ToDocument(object genericObject) {
+            var document = new ODocument();
 
             foreach (var fm in _fields)
                 fm.MapToDocument(genericObject, document);
 
-            if (string.IsNullOrEmpty(document.OClassName))
+            if (string.IsNullOrEmpty(document.OClassName) && genericObject != null)
                 document.OClassName = genericObject.GetType().Name;
 
             return document;
@@ -201,7 +181,7 @@ namespace Orient.Client.Mapping
             //    }
             //}
 
-      
+
 
             //return document;
         }

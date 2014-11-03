@@ -1,38 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
+    /// <summary>
+    /// Gets metadata from a record. 
+    /// </summary>
     internal class RecordMetadata : IOperation
     {
-        public ORID _orid { get; set; }
+        public ORID ORID { get; set; }
 
-        public RecordMetadata(ORID rid)
-        {
-            _orid = rid;
+        public RecordMetadata(ORID rid) {
+            ORID = rid;
         }
-        public Request Request(int sessionID)
-        {
-            Request request = new Request();
 
-            request.AddDataItem((byte)OperationType.RECORD_METADATA);
+        public Request Request(int sessionID) {
+            var request = new Request();
+
+            request.AddDataItem((byte) OperationType.RECORD_METADATA);
             request.AddDataItem(sessionID);
-
-            request.AddDataItem((short)_orid.ClusterId);
-            request.AddDataItem((long)_orid.ClusterPosition);
+            request.AddDataItem(ORID);
 
             return request;
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument document = new ODocument();
+        public ODocument Response(Response response) {
+            var document = new ODocument();
 
-            if (response == null)
-            {
+            if (response == null) {
                 return document;
             }
 
@@ -43,11 +38,11 @@ namespace Orient.Client.Protocol.Operations
             return document;
         }
 
-        private ORID ReadORID(BinaryReader reader)
-        {
-            ORID result = new ORID();
-            result.ClusterId = reader.ReadInt16EndianAware();
-            result.ClusterPosition = reader.ReadInt64EndianAware();
+        private ORID ReadORID(BinaryReader reader) {
+            var result = new ORID {
+                ClusterId = reader.ReadInt16EndianAware(),
+                ClusterPosition = reader.ReadInt64EndianAware()
+            };
             return result;
         }
     }

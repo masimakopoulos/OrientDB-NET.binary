@@ -1,39 +1,32 @@
-﻿using Orient.Client.API.Query;
-using Orient.Client.Protocol;
-using Orient.Client.Protocol.Operations;
+﻿using Orient.Client.Protocol;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
     public class OSqlDelete
     {
-        private Connection _connection;
+        private readonly Connection _connection;
 
-        internal OSqlDelete(Connection connection)
-        {
+        internal OSqlDelete(Connection connection) {
             _connection = connection;
         }
 
         #region Document
 
-        public OSqlDeleteDocument Document()
-        {
+        public OSqlDeleteDocument Document() {
             return new OSqlDeleteDocument(_connection);
         }
 
-        public OSqlDeleteDocument Document(string className)
-        {
+        public OSqlDeleteDocument Document(string className) {
             return new OSqlDeleteDocument(_connection)
                 .Class(className);
         }
 
-        public OSqlDeleteDocument Document<T>()
-        {
+        public OSqlDeleteDocument Document<T>() {
             return new OSqlDeleteDocument(_connection)
                 .Class<T>();
         }
 
-        public OSqlDeleteDocument Document<T>(T obj)
-        {
+        public OSqlDeleteDocument Document<T>(T obj) {
             return new OSqlDeleteDocument(_connection)
                 .Delete(obj);
         }
@@ -42,25 +35,21 @@ namespace Orient.Client
 
         #region Vertex
 
-        public OSqlDeleteVertex Vertex()
-        {
+        public OSqlDeleteVertex Vertex() {
             return new OSqlDeleteVertex(_connection);
         }
 
-        public OSqlDeleteVertex Vertex(string className)
-        {
+        public OSqlDeleteVertex Vertex(string className) {
             return new OSqlDeleteVertex(_connection)
                 .Class(className);
         }
 
-        public OSqlDeleteVertex Vertex<T>()
-        {
+        public OSqlDeleteVertex Vertex<T>() {
             return new OSqlDeleteVertex(_connection)
                 .Class<T>();
         }
 
-        public OSqlDeleteVertex Vertex<T>(T obj)
-        {
+        public OSqlDeleteVertex Vertex<T>(T obj) {
             return new OSqlDeleteVertex(_connection)
                 .Delete(obj);
         }
@@ -69,25 +58,21 @@ namespace Orient.Client
 
         #region Edge
 
-        public OSqlDeleteEdge Edge()
-        {
+        public OSqlDeleteEdge Edge() {
             return new OSqlDeleteEdge(_connection);
         }
 
-        public OSqlDeleteEdge Edge(string className)
-        {
+        public OSqlDeleteEdge Edge(string className) {
             return new OSqlDeleteEdge(_connection)
                 .Class(className);
         }
 
-        public OSqlDeleteEdge Edge<T>()
-        {
+        public OSqlDeleteEdge Edge<T>() {
             return new OSqlDeleteEdge(_connection)
                 .Class<T>();
         }
 
-        public OSqlDeleteEdge Edge<T>(T obj)
-        {
+        public OSqlDeleteEdge Edge<T>(T obj) {
             return new OSqlDeleteEdge(_connection)
                 .Delete(obj);
         }
@@ -96,20 +81,17 @@ namespace Orient.Client
 
         #region Cluster
 
-        public OSqlDeleteCluster Cluster(short clusterid)
-        {
+        public OSqlDeleteCluster Cluster(short clusterid) {
             return new OSqlDeleteCluster(_connection, clusterid);
         }
 
-        public OSqlDeleteCluster Cluster(string clusterName)
-        {
+        public OSqlDeleteCluster Cluster(string clusterName) {
             var clusterid = _connection.Database.GetClusterIdFor(clusterName);
             return Cluster(clusterid);
         }
 
-        public OSqlDeleteCluster Cluster<T>()
-        {
-            return Cluster(typeof(T).Name);
+        public OSqlDeleteCluster Cluster<T>() {
+            return Cluster(typeof (T).Name);
         }
 
         #endregion

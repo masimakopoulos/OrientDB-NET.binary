@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
@@ -9,29 +6,20 @@ namespace Orient.Client.Protocol.Operations
     {
         public short ClusterId { get; set; }
 
-        public DataClusterDataRange()
-        {
-
-        }
-
-        public Request Request(int sessionID)
-        {
-            Request request = new Request();
-            request.OperationMode = OperationMode.Synchronous;
+        public Request Request(int sessionID) {
+            var request = new Request {OperationMode = OperationMode.Synchronous};
 
             // standard request fields
-            request.AddDataItem((byte)OperationType.DATACLUSTER_DATARANGE);
+            request.AddDataItem((byte) OperationType.DATACLUSTER_DATARANGE);
             request.AddDataItem(sessionID);
             request.AddDataItem(ClusterId);
 
             return request;
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument document = new ODocument();
-            if (response == null)
-            {
+        public ODocument Response(Response response) {
+            var document = new ODocument();
+            if (response == null) {
                 return document;
             }
 
@@ -39,9 +27,9 @@ namespace Orient.Client.Protocol.Operations
             var begin = reader.ReadInt64EndianAware();
             var end = reader.ReadInt64EndianAware();
             var embededDoc = new ODocument();
-            embededDoc.SetField("begin", begin);
-            embededDoc.SetField("end", end);
-            document.SetField<ODocument>("Content", embededDoc);
+            embededDoc.SetField("Begin", begin);
+            embededDoc.SetField("End", end);
+            document.SetField("Content", embededDoc);
 
             return document;
         }

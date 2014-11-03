@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Orient.Client
+namespace Orient.Client.API.Exceptions
 {
     public class OException : Exception
     {

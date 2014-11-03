@@ -1,6 +1,7 @@
 ﻿
 using System;
-namespace Orient.Client
+
+namespace Orient.Client.API
 {
     public class OCluster : IEquatable<OCluster>
     {
@@ -9,63 +10,49 @@ namespace Orient.Client
         public OClusterType Type { get; set; }
 
         [Obsolete]
-        internal string Location { get; set; }
-        [Obsolete]
-        internal short DataSegmentID { get; set; }
-        [Obsolete]
-        internal string DataSegmentName { get; set; }
+        public string Location { get; set; }
 
-        public override bool Equals(object obj)
-        {
-            if (obj == null)
-            {
-                return false;
-            }
+        [Obsolete]
+        public short DataSegmentID { get; set; }
+
+        [Obsolete]
+        public string DataSegmentName { get; set; }
+
+        public override bool Equals(object obj) {
+            if (obj == null) return false;
 
             // if parameter cannot be cast to ORID return false.
-            OCluster other = obj as OCluster;
+            var other = obj as OCluster;
 
-            if (other == null)
-            {
-                return false;
-            }
-
-            return Equals(other);
+            return other != null && Equals(other);
         }
 
-        public override int GetHashCode()
-        {
-            return (Id * 17)
-                ^ Name.GetHashCode()
-                ^ Type.GetHashCode();
+        public override int GetHashCode() {
+            return (Id*17) ^ Name.GetHashCode() ^ Type.GetHashCode();
         }
 
-        public static bool operator ==(OCluster left, OCluster right)
-        {
-            if (System.Object.ReferenceEquals(left, right))
-            {
+        public static bool operator ==(OCluster left, OCluster right) {
+            if (ReferenceEquals(left, right)) {
                 return true;
             }
 
-            if (((object)left == null) || ((object)right == null))
-            {
+            if (((object) left == null) || ((object) right == null)) {
                 return false;
             }
 
             return left.Equals(right);
         }
 
-        public static bool operator !=(OCluster left, OCluster right)
-        {
+        public static bool operator !=(OCluster left, OCluster right) {
             return !(left == right);
         }
 
-        public bool Equals(OCluster other)
-        {
+        public bool Equals(OCluster other) {
             if (other == null)
                 return false;
 
-            return Id == other.Id && String.Equals(Name, other.Name, StringComparison.InvariantCultureIgnoreCase) && Type == other.Type;
+            return Id == other.Id && String.Equals(Name, other.Name, StringComparison.InvariantCultureIgnoreCase) &&
+                   Type == other.Type;
         }
     }
 }

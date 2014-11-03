@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Orient.Client.Protocol.Serializers;
+﻿using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
@@ -11,29 +6,26 @@ namespace Orient.Client.Protocol.Operations
     {
         internal string ConfigKey { get; set; }
 
-        public Request Request(int sessionID)
-        {
-            Request request = new Request();
+        public Request Request(int sessionID) {
+            var request = new Request();
 
             // standard request fields
-            request.AddDataItem((byte)OperationType.CONFIG_GET);
+            request.AddDataItem((byte) OperationType.CONFIG_GET);
             request.AddDataItem(sessionID);
 
             request.AddDataItem(ConfigKey);
             return request;
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument document = new ODocument();
+        public ODocument Response(Response response) {
+            var document = new ODocument();
 
-            if (response == null)
-            {
+            if (response == null) {
                 return document;
             }
 
-            BinaryReader reader = response.Reader;
-            string value = reader.ReadInt32PrefixedString();
+            var reader = response.Reader;
+            var value = reader.ReadInt32PrefixedString();
             document.SetField(ConfigKey, value);
             return document;
         }

@@ -1,4 +1,6 @@
 ﻿using System;
+using Orient.Client.API;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
@@ -41,12 +43,8 @@ namespace Orient.Client.Protocol.Operations
 
         public int Version
         {
-            get
-            {
-                if (Document != null)
-                    return Document.OVersion;
-
-                return Object.OVersion;
+            get {
+                return Document != null ? Document.OVersion : Object.OVersion;
             }
             set
             {
@@ -59,18 +57,14 @@ namespace Orient.Client.Protocol.Operations
 
         public string OClassName
         {
-            get
-            {
-                if (Document != null)
-                    return Document.OClassName;
-
-                return Object.OClassName;
+            get {
+                return Document != null ? Document.OClassName : Object.OClassName;
             }
         }
 
 
-        public void AddToRequest(Request request)
-        {
+        public void AddToRequest(Request request) {
+            var document = GetDocument();
             request.AddDataItem((byte)1); // undocumented but the java code does this
             request.AddDataItem((byte)RecordType);
             request.AddDataItem(ORID.ClusterId);
@@ -80,19 +74,16 @@ namespace Orient.Client.Protocol.Operations
             switch (RecordType)
             {
                 case RecordType.Create:
-                    request.AddDataItem(GetDocument().Serialize());
+                    request.AddDataItem(document.Serialize());
                     break;
                 case RecordType.Delete:
                     request.AddDataItem(Version);
                     break;
                 case RecordType.Update:
                     request.AddDataItem(Version);
-                    //request.AddDataItem((byte)1);
-                    request.AddDataItem(GetDocument().Serialize());
-                    if (OClient.ProtocolVersion >= 23)
-                    {
-                        request.AddDataItem((byte)1); // updateContent flag 
-                    }
+                    request.AddDataItem(document.Serialize());
+                    if (ServerInfo.ProtocolVersion >= 23)
+                        request.AddDataItem(document.IsContentChanged);
                     break;
 
                 default:

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
@@ -10,12 +7,11 @@ namespace Orient.Client.Protocol.Operations
         public string Key { get; set; }
         public string Value { get; set; }
 
-        public Request Request(int sessionID)
-        {
-            Request request = new Request();
+        public Request Request(int sessionID) {
+            var request = new Request();
 
             // standard request fields
-            request.AddDataItem((byte)OperationType.CONFIG_SET);
+            request.AddDataItem((byte) OperationType.CONFIG_SET);
             request.AddDataItem(sessionID);
 
             request.AddDataItem(Key);
@@ -24,21 +20,17 @@ namespace Orient.Client.Protocol.Operations
 
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument document = new ODocument();
+        public ODocument Response(Response response) {
+            var document = new ODocument();
 
-            if (response == null)
-            {
+            if (response == null) {
                 return document;
             }
 
-            if (response.Status == ResponseStatus.OK)
-            {
+            if (response.Status == ResponseStatus.OK) {
                 document.SetField("IsCreated", true);
             }
-            else
-            {
+            else {
                 document.SetField("IsCreated", true);
             }
 

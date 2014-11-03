@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Transactions
 {
@@ -14,7 +15,7 @@ namespace Orient.Client.Transactions
             var orids = GetValue(oTarget);
             if (orids == null)
                 return;
-            for (int i = 0; i < orids.Count; i++)
+            for (var i = 0; i < orids.Count; i++)
             {
                 ORID replacement;
                 if (mappings.TryGetValue(orids[i], out replacement))

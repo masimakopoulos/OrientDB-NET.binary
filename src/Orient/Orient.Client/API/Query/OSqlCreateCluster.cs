@@ -1,15 +1,17 @@
 ﻿using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
-using Orient.Client.Protocol.Operations.Command;
 
 // syntax:
 // CREATE CLUSTER <name> <type> 
 // [DATASEGMENT <data-segment>|default] 
 // [LOCATION <path>|default] 
 // [POSITION <position>|append]
+using Orient.Client.Protocol.Operations.Command;
+using Orient.Client.Protocol.Query;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
+
     public interface OSqlCreateCluster {
         OSqlCreateCluster Cluster(string clusterName, OClusterType clusterType);
         OSqlCreateCluster Cluster<T>(OClusterType clusterType);
@@ -19,50 +21,46 @@ namespace Orient.Client
 
     public class OSqlCreateClusterViaSql : OSqlCreateCluster
     {
-        private SqlQuery _sqlQuery = new SqlQuery();
-        private Connection _connection;
+        private readonly SqlQuery _sqlQuery = new SqlQuery();
+        private readonly Connection _connection;
 
-        public OSqlCreateClusterViaSql()
-        {
+        public OSqlCreateClusterViaSql() {
         }
 
-        internal OSqlCreateClusterViaSql(Connection connection)
-        {
+        internal OSqlCreateClusterViaSql(Connection connection) {
             _connection = connection;
         }
 
         #region Cluster
 
-        public OSqlCreateCluster Cluster(string clusterName, OClusterType clusterType)
-        {
+        public OSqlCreateCluster Cluster(string clusterName, OClusterType clusterType) {
             _sqlQuery.Cluster(clusterName, clusterType);
 
             return this;
         }
 
-        public OSqlCreateCluster Cluster<T>(OClusterType clusterType)
-        {
+        public OSqlCreateCluster Cluster<T>(OClusterType clusterType) {
             return Cluster(typeof(T).Name, clusterType);
         }
 
         #endregion
 
-        public short Run()
-        {
-            CommandPayloadCommand payload = new CommandPayloadCommand();
-            payload.Text = ToString();
+        public short Run() {
+            var payload = new CommandPayloadCommand() {
+                Text = ToString()
+            };
 
-            Command operation = new Command();
-            operation.OperationMode = OperationMode.Synchronous;
-            operation.CommandPayload = payload;
+            var operation = new Command {
+                OperationMode = OperationMode.Synchronous,
+                CommandPayload = payload
+            };
 
-            OCommandResult result = new OCommandResult(_connection.ExecuteOperation(operation));
+            var result = new OCommandResult(_connection.ExecuteOperation(operation));
 
             return short.Parse(result.ToDocument().GetField<string>("Content"));
         }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return _sqlQuery.ToString(QueryType.CreateCluster);
         }
     }

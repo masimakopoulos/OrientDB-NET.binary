@@ -1,102 +1,90 @@
 ﻿using System;
 using System.Collections.Generic;
+using Orient.Client.API.Types;
 using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
 
-namespace Orient.Client
+namespace Orient.Client.API
 {
     public class OServer : IDisposable
     {
-        private Connection _connection;
+        private readonly Connection _connection;
 
-        public OServer(string hostname, int port, string userName, string userPassword)
-        {
-            _connection = new Connection(hostname, port, userName, userPassword);
+        public OServer(IServerAddress serverAddress, IServerCredentials serverCredentials) {
+            if (serverAddress == null) throw new ArgumentNullException("serverAddress");
+            if (serverCredentials == null) throw new ArgumentNullException("serverCredentials");
+
+            _connection = new Connection(serverAddress, serverCredentials);
         }
 
-        public bool CreateDatabase(string databaseName, ODatabaseType databaseType, OStorageType storageType)
-        {
-            DbCreate operation = new DbCreate();
-            operation.DatabaseName = databaseName;
-            operation.DatabaseType = databaseType;
-            operation.StorageType = storageType;
+        public bool CreateDatabase(string databaseName, ODatabaseType databaseType, OStorageType storageType) {
+            var operation = new DbCreate {
+                DatabaseName = databaseName,
+                DatabaseType = databaseType,
+                StorageType = storageType
+            };
 
-            ODocument document = _connection.ExecuteOperation(operation);
+            var document = _connection.ExecuteOperation(operation);
 
             return document.GetField<bool>("IsCreated");
         }
 
-        public bool DatabaseExist(string databaseName, OStorageType storageType)
-        {
-            DbExist operation = new DbExist();
-            operation.DatabaseName = databaseName;
-            operation.StorageType = storageType;
+        public bool DatabaseExists(string databaseName, OStorageType storageType) {
+            var operation = new DbExist {DatabaseName = databaseName, StorageType = storageType};
 
-            ODocument document = _connection.ExecuteOperation(operation);
+            var document = _connection.ExecuteOperation(operation);
 
             return document.GetField<bool>("Exists");
         }
 
-        public void DropDatabase(string databaseName, OStorageType storageType)
-        {
-            DbDrop operation = new DbDrop();
-            operation.DatabaseName = databaseName;
-            operation.StorageType = storageType;
+        public void DropDatabase(string databaseName, OStorageType storageType) {
+            var operation = new DbDrop {DatabaseName = databaseName, StorageType = storageType};
 
-            ODocument document = _connection.ExecuteOperation(operation);
+            _connection.ExecuteOperation(operation);
         }
+
 
         #region Configuration
 
-        public string ConfigGet(string key)
-        {
-            ConfigGet operation = new ConfigGet();
-            operation.ConfigKey = key;
-            ODocument document = _connection.ExecuteOperation(operation);
+        public string ConfigGet(string key) {
+            var operation = new ConfigGet {ConfigKey = key};
+            var document = _connection.ExecuteOperation(operation);
             return document.GetField<string>(key);
         }
 
-        public bool ConfigSet(string configKey, string configValue)
-        {
-            ConfigSet operation = new ConfigSet();
-            operation.Key = configKey;
-            operation.Value = configValue;
-            ODocument document = _connection.ExecuteOperation(operation);
+        public bool ConfigSet(string configKey, string configValue) {
+            var operation = new ConfigSet {Key = configKey, Value = configValue};
+            var document = _connection.ExecuteOperation(operation);
 
             return document.GetField<bool>("IsCreated");
         }
 
-        public Dictionary<string, string> ConfigList()
-        {
-            ConfigList operation = new ConfigList();
-            ODocument document = _connection.ExecuteOperation(operation);
+        public Dictionary<string, string> ConfigList() {
+            var operation = new ConfigList();
+            var document = _connection.ExecuteOperation(operation);
             return document.GetField<Dictionary<string, string>>("config");
         }
 
         #endregion
 
-        public Dictionary<string, string> Databases()
-        {
-            Dictionary<string, string> returnValue = new Dictionary<string, string>();
-            DBList operation = new DBList();
-            ODocument document = _connection.ExecuteOperation(operation);
-            string[] databases = document.GetField<string>("databases").Split(',');
-            foreach (var item in databases)
-            {
-                string[] keyValue = item.Split(':');
+        public Dictionary<string, string> Databases() {
+            var returnValue = new Dictionary<string, string>();
+            var operation = new DBList();
+            var document = _connection.ExecuteOperation(operation);
+            var databases = document.GetField<string>("databases").Split(',');
+            foreach (var item in databases) {
+                if(string.IsNullOrEmpty(item)) continue;
+                var keyValue = item.Split(':');
                 returnValue.Add(keyValue[0], keyValue[1] + ":" + keyValue[2]);
             }
             return returnValue;
         }
-        
-        
-        public void Close()
-        {
+
+        public void Close() {
             _connection.Dispose();
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             Close();
         }
     }

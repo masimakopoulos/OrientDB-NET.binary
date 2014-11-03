@@ -1,4 +1,4 @@
-﻿namespace Orient.Client
+﻿namespace Orient.Client.API.Types
 {
     public interface IBaseRecord
     {

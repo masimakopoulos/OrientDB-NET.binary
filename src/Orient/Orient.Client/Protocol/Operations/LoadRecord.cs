@@ -1,61 +1,54 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
+using Orient.Client.API;
+using Orient.Client.API.Types;
 using Orient.Client.Protocol.Serializers;
 
 namespace Orient.Client.Protocol.Operations
 {
-    class LoadRecord : IOperation
+    internal class LoadRecord : IOperation
     {
-        private readonly ORID _orid;
-        private readonly string _fetchPlan;
         private readonly ODatabase _database;
+        private readonly string _fetchPlan;
+        private readonly ORID _orid;
 
-        public LoadRecord(ORID orid, string fetchPlan, ODatabase database)
-        {
+        public LoadRecord(ORID orid, string fetchPlan, ODatabase database) {
             _orid = orid;
             _fetchPlan = fetchPlan;
             _database = database;
         }
 
-        public Request Request(int sessionID)
-        {
-            Request request = new Request();
+        public Request Request(int sessionId) {
+            var request = new Request();
 
             // standard request fields
             request.AddDataItem((byte)OperationType.RECORD_LOAD);
-            request.AddDataItem(sessionID);
+            request.AddDataItem(sessionId);
             request.AddDataItem(_orid);
             request.AddDataItem(_fetchPlan);
+            if (ServerInfo.ProtocolVersion >= 9) // Ignore cache 1-true, 0-false
+                request.AddDataItem((byte)0);
+            if (ServerInfo.ProtocolVersion >= 13) // Load tombstones 1-true , 0-false
+                request.AddDataItem((byte)0);
 
-            if (OClient.ProtocolVersion >= 9) // Ignore Cache 1-true, 0-false
-                request.AddDataItem((byte)0);
-            if (OClient.ProtocolVersion >= 13) // Load tombstones 1-true , 0-false
-                request.AddDataItem((byte)0);
             return request;
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument responseDocument = new ODocument();
+        public ODocument Response(Response response) {
+            var responseDocument = new ODocument();
 
-            if (response == null)
-            {
+            if (response == null) {
                 return responseDocument;
             }
 
             var reader = response.Reader;
 
-            while (true)
-            {
-                PayloadStatus payload_status = (PayloadStatus)reader.ReadByte();
+            while (true) {
+                var payloadStatus = (PayloadStatus)reader.ReadByte();
 
-                bool done = false;
-                switch (payload_status)
-                {
+                var done = false;
+                switch (payloadStatus) {
                     case PayloadStatus.NoRemainingRecords:
                         done = true;
                         break;
@@ -69,8 +62,7 @@ namespace Orient.Client.Protocol.Operations
                         throw new InvalidOperationException();
                 }
 
-                if (done)
-                {
+                if (done) {
                     break;
                 }
             }
@@ -78,43 +70,41 @@ namespace Orient.Client.Protocol.Operations
             return responseDocument;
         }
 
-        private void ReadAssociatedResult(BinaryReader reader)
-        {
+        private void ReadAssociatedResult(BinaryReader reader) {
             var zero = reader.ReadInt16EndianAware();
             if (zero != 0)
                 throw new InvalidOperationException("Unsupported record format");
 
-            ORecordType recordType = (ORecordType)reader.ReadByte();
+            var recordType = (ORecordType)reader.ReadByte();
             if (recordType != ORecordType.Document)
                 throw new InvalidOperationException("Unsupported record type");
 
-            short clusterId = reader.ReadInt16EndianAware();
-            long clusterPosition = reader.ReadInt64EndianAware();
-            int recordVersion = reader.ReadInt32EndianAware();
+            var clusterId = reader.ReadInt16EndianAware();
+            var clusterPosition = reader.ReadInt64EndianAware();
+            var recordVersion = reader.ReadInt32EndianAware();
 
             var recordLength = reader.ReadInt32EndianAware();
             var record = reader.ReadBytes(recordLength);
 
-            var document = RecordSerializer.Deserialize(new ORID(clusterId, clusterPosition), recordVersion, ORecordType.Document, 0, record);
+            var document = RecordSerializer.Deserialize(new ORID(clusterId, clusterPosition), recordVersion,
+                ORecordType.Document, 0, record);
 
             _database.ClientCache[document.ORID] = document;
         }
 
-        private void ReadPrimaryResult(ODocument responseDocument, BinaryReader reader)
-        {
+        private void ReadPrimaryResult(ODocument responseDocument, BinaryReader reader) {
             responseDocument.SetField("PayloadStatus", PayloadStatus.SingleRecord);
 
             var contentLength = reader.ReadInt32EndianAware();
-            byte[] readBytes = reader.ReadBytes(contentLength);
+            var readBytes = reader.ReadBytes(contentLength);
             var version = reader.ReadInt32EndianAware();
             var recordType = (ORecordType)reader.ReadByte();
-
+            
             var document = new ODocument();
 
-            switch (recordType)
-            {
+            switch (recordType) {
                 case ORecordType.Document:
-                    string serialized = System.Text.Encoding.Default.GetString(readBytes);
+                    var serialized = Encoding.Default.GetString(readBytes);
                     document = RecordSerializer.Deserialize(serialized);
                     document.ORID = _orid;
                     document.OVersion = version;
@@ -126,6 +116,8 @@ namespace Orient.Client.Protocol.Operations
                     break;
                 case ORecordType.FlatData:
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }

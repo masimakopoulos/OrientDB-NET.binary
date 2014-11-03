@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Orient.Client.API;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
@@ -11,41 +9,35 @@ namespace Orient.Client.Protocol.Operations
 
         public string ClusterName { get; set; }
 
-        public Request Request(int sessionID)
-        {
-            Request request = new Request();
-            request.OperationMode = OperationMode.Synchronous;
+        public Request Request(int sessionID) {
+            var request = new Request {OperationMode = OperationMode.Synchronous};
 
             // standard request fields
-            request.AddDataItem((byte)OperationType.DATACLUSTER_ADD);
+            request.AddDataItem((byte) OperationType.DATACLUSTER_ADD);
             request.AddDataItem(sessionID);
 
-            if (OClient.ProtocolVersion < 24)
+            if (ServerInfo.ProtocolVersion < 24)
                 request.AddDataItem(ClusterType.ToString().ToUpper());
 
             request.AddDataItem(ClusterName);
 
-            if (OClient.ProtocolVersion >= 18)
-            {
-                request.AddDataItem((short)-1); //clusterid
+            if (ServerInfo.ProtocolVersion >= 18) {
+                request.AddDataItem((short) -1); //clusterid
             }
             return request;
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument document = new ODocument();
-            if (response == null)
-            {
+        public ODocument Response(Response response) {
+            var document = new ODocument();
+            if (response == null) {
                 return document;
             }
 
             var reader = response.Reader;
             var clusterid = reader.ReadInt16EndianAware();
-            document.SetField<short>("clusterid", clusterid);
+            document.SetField("ClusterId", clusterid);
 
             return document;
         }
-
     }
 }

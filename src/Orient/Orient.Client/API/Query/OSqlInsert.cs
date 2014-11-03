@@ -1,18 +1,20 @@
-﻿using Orient.Client.Protocol;
+﻿using Orient.Client.API.Types;
+using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
-using Orient.Client.Protocol.Operations.Command;
 
 // syntax:
 // INSERT INTO <Class>|cluster:<cluster>|index:<index> 
 // [<cluster>](cluster) 
 // [VALUES (<expression>[,]((<field>[,]*))*)]|[<field> = <expression>[,](SET)*]
+using Orient.Client.Protocol.Operations.Command;
+using Orient.Client.Protocol.Query;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
     public class OSqlInsert
     {
-        private SqlQuery _sqlQuery = new SqlQuery();
-        private Connection _connection;
+        private readonly SqlQuery _sqlQuery = new SqlQuery();
+        private readonly Connection _connection;
 
         public OSqlInsert()
         {
@@ -102,14 +104,14 @@ namespace Orient.Client
 
         public ODocument Run()
         {
-            CommandPayloadCommand payload = new CommandPayloadCommand();
-            payload.Text = ToString();
+            var payload = new CommandPayloadCommand {Text = ToString()};
 
-            Command operation = new Command();
-            operation.OperationMode = OperationMode.Synchronous;
-            operation.CommandPayload = payload;
+            var operation = new Command {
+                OperationMode = OperationMode.Synchronous,
+                CommandPayload = payload
+            };
 
-            OCommandResult result = new OCommandResult(_connection.ExecuteOperation(operation));
+            var result = new OCommandResult(_connection.ExecuteOperation(operation));
 
             return result.ToSingle();
         }

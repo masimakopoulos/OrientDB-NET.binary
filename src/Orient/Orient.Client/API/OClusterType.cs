@@ -1,5 +1,5 @@
 ﻿
-namespace Orient.Client
+namespace Orient.Client.API
 {
     public enum OClusterType
     {

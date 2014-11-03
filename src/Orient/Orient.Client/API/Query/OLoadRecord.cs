@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Orient.Client.API.Types;
 using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
 
@@ -13,30 +10,24 @@ namespace Orient.Client.API.Query
         private ORID _orid;
         private string _fetchPlan = string.Empty;
 
-        internal OLoadRecord(Connection connection)
-        {
+        internal OLoadRecord(Connection connection) {
             _connection = connection;
         }
 
-        public OLoadRecord ORID(ORID orid)
-        {
+        public OLoadRecord ORID(ORID orid) {
             _orid = orid;
             return this;
         }
 
-        public OLoadRecord FetchPlan(string plan)
-        {
+        public OLoadRecord FetchPlan(string plan) {
             _fetchPlan = plan;
             return this;
         }
 
-        public ODocument Run()
-        {
+        public ODocument Run() {
             var operation = new LoadRecord(_orid, _fetchPlan, _connection.Database);
-
-            var result = new OCommandResult(_connection.ExecuteOperation(operation));
-
-            return result.ToSingle().To<ODocument>();
+            var result = new OCommandResult(_connection.ExecuteOperation(operation)).ToSingle();
+            return result == null ? null : result.To<ODocument>();
         }
     }
 }

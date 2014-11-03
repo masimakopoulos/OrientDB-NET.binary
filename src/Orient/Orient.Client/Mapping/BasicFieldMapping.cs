@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Mapping
 {
@@ -11,13 +12,13 @@ namespace Orient.Client.Mapping
 
         protected override void MapToNamedField(ODocument document, TTarget typedObject)
         {
-            SetPropertyValue(typedObject, document.GetField<object>(_fieldPath));
+            SetPropertyValue(typedObject, document.GetField<object>(FieldPath));
         }
 
-        public override void MapToDocument(TTarget typedObject, ODocument document)
+        protected override void MapToDocument(TTarget typedObject, ODocument document)
         {
-            object value = GetPropertyValue(typedObject);
-            document.SetField(_fieldPath, value);
+            var value = GetPropertyValue(typedObject);
+            document.SetField(FieldPath, value);
         }
     }
 }

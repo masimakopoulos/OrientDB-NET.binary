@@ -1,13 +1,16 @@
-﻿using Orient.Client.Protocol;
+﻿using Orient.Client.API.Exceptions;
+using Orient.Client.API.Types;
+using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
-using Orient.Client.Protocol.Operations.Command;
 
 // syntax: 
 // CREATE VERTEX [<class>] 
 // [CLUSTER <cluster>] 
 // [SET <field> = <expression>[,]*]
+using Orient.Client.Protocol.Operations.Command;
+using Orient.Client.Protocol.Query;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
     public interface OSqlCreateVertex
     {
@@ -25,8 +28,8 @@ namespace Orient.Client
 
     public class OSqlCreateVertexViaSql : OSqlCreateVertex
     {
-        private SqlQuery _sqlQuery = new SqlQuery();
-        private Connection _connection;
+        private readonly SqlQuery _sqlQuery = new SqlQuery();
+        private readonly Connection _connection;
 
         public OSqlCreateVertexViaSql()
         {
@@ -115,14 +118,14 @@ namespace Orient.Client
 
         public OVertex Run()
         {
-            CommandPayloadCommand payload = new CommandPayloadCommand();
-            payload.Text = ToString();
+            var payload = new CommandPayloadCommand {Text = ToString()};
 
-            Command operation = new Command();
-            operation.OperationMode = OperationMode.Synchronous;
-            operation.CommandPayload = payload;
+            var operation = new Command {
+                OperationMode = OperationMode.Synchronous,
+                CommandPayload = payload
+            };
 
-            OCommandResult result = new OCommandResult(_connection.ExecuteOperation(operation));
+            var result = new OCommandResult(_connection.ExecuteOperation(operation));
 
             return result.ToSingle().To<OVertex>();
         }

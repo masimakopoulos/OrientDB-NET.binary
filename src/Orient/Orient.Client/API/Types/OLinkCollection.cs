@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Orient.Client
+namespace Orient.Client.API.Types
 {
     internal class OLinkCollection : List<ORID>
     {

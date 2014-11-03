@@ -1,71 +1,57 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using Orient.Client.Protocol.Serializers;
+using Orient.Client.API;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
     class DbReload : IOperation
     {
-       
+        public Request Request(int sessionId) {
+            var request = new Request();
 
-
-        public Request Request(int sessionID)
-        {
-            Request request = new Request();
             // standard request fields
-            request.AddDataItem((byte) OperationType.DB_RELOAD);
-            request.AddDataItem(sessionID);
-       
+            request.AddDataItem((byte)OperationType.DB_RELOAD);
+            request.AddDataItem(sessionId);
+
             return request;
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument document = new ODocument();
+        public ODocument Response(Response response) {
+            var document = new ODocument();
 
-            if (response == null)
-            {
+            if (response == null) {
                 return document;
             }
 
             var reader = response.Reader;
 
-            short clusterCount = reader.ReadInt16EndianAware();
+            // operation specific fields
+            var clusterCount = reader.ReadInt16EndianAware();
             document.SetField("ClusterCount", clusterCount);
 
-            if (clusterCount > 0)
-            {
-                List<OCluster> clusters = new List<OCluster>();
+            if (clusterCount <= 0) return document;
+            var clusters = new List<OCluster>();
 
-                for (int i = 1; i <= clusterCount; i++)
-                {
-                    OCluster cluster = new OCluster();
+            for (var i = 1; i <= clusterCount; i++) {
+                var cluster = new OCluster();
 
-                    int clusterNameLength = reader.ReadInt32EndianAware();
+                var clusterNameLength = reader.ReadInt32EndianAware();
 
-                    cluster.Name = System.Text.Encoding.Default.GetString(reader.ReadBytes(clusterNameLength));
+                cluster.Name = Encoding.Default.GetString(reader.ReadBytes(clusterNameLength));
 
-                    cluster.Id = reader.ReadInt16EndianAware();
-
-                    if (OClient.ProtocolVersion < 24)
-                    {
-                        int clusterTypeLength = reader.ReadInt32EndianAware();
-
-                        string clusterType = System.Text.Encoding.Default.GetString(reader.ReadBytes(clusterTypeLength));
-                        //cluster.Type = (OClusterType)Enum.Parse(typeof(OClusterType), clusterType, true);
-                        if (OClient.ProtocolVersion >= 12)
-                            cluster.DataSegmentID = reader.ReadInt16EndianAware();
-                        else
-                            cluster.DataSegmentID = 0;
-                    }
-
-                    clusters.Add(cluster);
+                cluster.Id = reader.ReadInt16EndianAware();
+                if (ServerInfo.ProtocolVersion < 24) {
+                    var clusterTypeLength = reader.ReadInt32EndianAware();
+                    var clusterType = Encoding.Default.GetString(reader.ReadBytes(clusterTypeLength));
+                    cluster.Type = (OClusterType)Enum.Parse(typeof(OClusterType), clusterType, true);
+                    cluster.DataSegmentID = (ServerInfo.ProtocolVersion >= 12) ? reader.ReadInt16EndianAware() : (short)0;
                 }
-
-                document.SetField("Clusters", clusters);
+                clusters.Add(cluster);
             }
+
+            document.SetField("Clusters", clusters);
 
             return document;
         }

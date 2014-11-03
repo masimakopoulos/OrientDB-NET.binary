@@ -1,37 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Orient.Client.Protocol.Serializers;
+﻿using Orient.Client.API;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
-    internal class DBSize : IOperation
+    internal class DbSize : IOperation
     {
-        public Request Request(int sessionID)
-        {
-            Request request = new Request();
-            request.OperationMode = OperationMode.Synchronous;
+        internal string DatabaseName { get; set; }
+        internal OStorageType StorageType { get; set; }
+
+        public Request Request(int sessionId) {
+            var request = new Request {OperationMode = OperationMode.Synchronous};
 
             // standard request fields
             request.AddDataItem((byte)OperationType.DB_SIZE);
-            request.AddDataItem(sessionID);
+            request.AddDataItem(sessionId);
+            // operation specific fields
 
             return request;
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument document = new ODocument();
-            if (response == null)
-            {
+        public ODocument Response(Response response) {
+            var document = new ODocument();
+
+            if (response == null) {
                 return document;
             }
 
             var reader = response.Reader;
-            var size = reader.ReadInt64EndianAware();
-            document.SetField<long>("size", size);
 
+            // operation specific fields
+            var size = reader.ReadInt64EndianAware();
+
+            document.SetField("Size", size);
             return document;
         }
     }

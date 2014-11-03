@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
+using Orient.Client.API.Exceptions;
+using Orient.Client.API.Types;
 using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
 
@@ -8,11 +9,11 @@ using Orient.Client.Protocol.Operations;
 // [CLUSTER <cluster>] 
 // [SET <field> = <expression>[,]*]
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
     public class OCreateVertexRecord : OSqlCreateVertex
     {
-        private Connection _connection;
+        private readonly Connection _connection;
         private ODocument _document;
 
         public OCreateVertexRecord()
@@ -96,7 +97,7 @@ namespace Orient.Client
             var document = obj is ODocument ? obj as ODocument : ODocument.ToDocument(obj);
 
             // TODO: go also through embedded fields
-            foreach (KeyValuePair<string, object> field in document)
+            foreach (var field in document)
             {
                 // set only fields which doesn't start with @ character
                 if ((field.Key.Length > 0) && (field.Key[0] != '@'))

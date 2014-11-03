@@ -1,5 +1,5 @@
 ﻿
-namespace Orient.Client.Protocol
+namespace Orient.Client.Protocol.Query
 {
     internal enum QueryType
     {

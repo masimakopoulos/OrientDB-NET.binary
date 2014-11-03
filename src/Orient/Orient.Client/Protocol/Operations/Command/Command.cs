@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Orient.Client.Protocol;
+using Orient.Client.API;
+using Orient.Client.API.Exceptions;
+using Orient.Client.API.Types;
 using Orient.Client.Protocol.Serializers;
 
 namespace Orient.Client.Protocol.Operations.Command
@@ -11,9 +12,8 @@ namespace Orient.Client.Protocol.Operations.Command
         internal OperationMode OperationMode { get; set; }
         internal CommandPayloadBase CommandPayload { get; set; }
 
-        public Request Request(int sessionId)
-        {
-            Request request = new Request();
+        public Request Request(int sessionId) {
+            var request = new Request();
 
             // standard request fields
             request.AddDataItem((byte)OperationType.COMMAND);
@@ -23,8 +23,7 @@ namespace Orient.Client.Protocol.Operations.Command
 
             // idempotent command (e.g. select)
             var queryPayload = CommandPayload as CommandPayloadQuery;
-            if (queryPayload != null)
-            {
+            if (queryPayload != null) {
                 // Write command payload length
                 request.AddDataItem(queryPayload.PayLoadLength);
                 request.AddDataItem(queryPayload.ClassName);
@@ -40,8 +39,7 @@ namespace Orient.Client.Protocol.Operations.Command
             }
             // non-idempotent command (e.g. insert)
             var scriptPayload = CommandPayload as CommandPayloadScript;
-            if (scriptPayload != null)
-            {
+            if (scriptPayload != null) {
                 // Write command payload length
                 request.AddDataItem(scriptPayload.PayLoadLength);
                 request.AddDataItem(scriptPayload.ClassName);
@@ -54,8 +52,7 @@ namespace Orient.Client.Protocol.Operations.Command
                 return request;
             }
             var commandPayload = CommandPayload as CommandPayloadCommand;
-            if (commandPayload != null)
-            {
+            if (commandPayload != null) {
                 // Write command payload length
                 request.AddDataItem(commandPayload.PayLoadLength);
                 request.AddDataItem(commandPayload.ClassName);
@@ -72,32 +69,27 @@ namespace Orient.Client.Protocol.Operations.Command
             throw new OException(OExceptionType.Operation, "Invalid payload");
         }
 
-        public ODocument Response(Response response)
-        {
-            ODocument responseDocument = new ODocument();
+        public ODocument Response(Response response) {
+            var responseDocument = new ODocument();
 
-            if (response == null)
-            {
+            if (response == null) {
                 return responseDocument;
             }
 
             var reader = response.Reader;
 
             // operation specific fields
-            PayloadStatus payloadStatus = (PayloadStatus)reader.ReadByte();
+            var payloadStatus = (PayloadStatus)reader.ReadByte();
 
             responseDocument.SetField("PayloadStatus", payloadStatus);
 
-            if (OperationMode == OperationMode.Asynchronous)
-            {
-                List<ODocument> documents = new List<ODocument>();
+            if (OperationMode == OperationMode.Asynchronous) {
+                var documents = new List<ODocument>();
 
-                while (payloadStatus != PayloadStatus.NoRemainingRecords)
-                {
-                    ODocument document = ParseDocument(reader);
+                while (payloadStatus != PayloadStatus.NoRemainingRecords) {
+                    var document = ParseDocument(reader);
 
-                    switch (payloadStatus)
-                    {
+                    switch (payloadStatus) {
                         case PayloadStatus.ResultSet:
                             documents.Add(document);
                             break;
@@ -113,33 +105,29 @@ namespace Orient.Client.Protocol.Operations.Command
                 }
 
                 responseDocument.SetField("Content", documents);
-            }
-            else
-            {
+            } else {
                 int contentLength;
 
-                switch (payloadStatus)
-                {
+                switch (payloadStatus) {
                     case PayloadStatus.NullResult: // 'n'
                         // nothing to do
                         break;
                     case PayloadStatus.SingleRecord: // 'r'
-                        ODocument document = ParseDocument(reader);
+                        var document = ParseDocument(reader);
                         responseDocument.SetField("Content", document);
                         break;
                     case PayloadStatus.SerializedResult: // 'a'
                         // TODO: how to parse result - string?
                         contentLength = reader.ReadInt32EndianAware();
-                        string serialized = System.Text.Encoding.Default.GetString(reader.ReadBytes(contentLength));
+                        var serialized = System.Text.Encoding.Default.GetString(reader.ReadBytes(contentLength));
                         responseDocument.SetField("Content", serialized);
                         break;
                     case PayloadStatus.RecordCollection: // 'l'
-                        List<ODocument> documents = new List<ODocument>();
+                        var documents = new List<ODocument>();
 
-                        int recordsCount = reader.ReadInt32EndianAware();
+                        var recordsCount = reader.ReadInt32EndianAware();
 
-                        for (int i = 0; i < recordsCount; i++)
-                        {
+                        for (var i = 0; i < recordsCount; i++) {
                             documents.Add(ParseDocument(reader));
                         }
 
@@ -149,14 +137,11 @@ namespace Orient.Client.Protocol.Operations.Command
                         break;
                 }
 
-                if (OClient.ProtocolVersion >= 17)
-                {
+                if (ServerInfo.ProtocolVersion >= 17) {
                     //Load the fetched records in cache
-                    while ((payloadStatus = (PayloadStatus)reader.ReadByte()) != PayloadStatus.NoRemainingRecords)
-                    {
-                        ODocument document = ParseDocument(reader);
-                        if (document != null && payloadStatus == PayloadStatus.PreFetched)
-                        {
+                    while ((payloadStatus = (PayloadStatus)reader.ReadByte()) != PayloadStatus.NoRemainingRecords) {
+                        var document = ParseDocument(reader);
+                        if (document != null && payloadStatus == PayloadStatus.PreFetched) {
                             //Put in the client local cache
                             response.Connection.Database.ClientCache[document.ORID] = document;
                         }
@@ -167,35 +152,31 @@ namespace Orient.Client.Protocol.Operations.Command
             return responseDocument;
         }
 
-        private ODocument ParseDocument(BinaryReader reader)
-        {
+        private ODocument ParseDocument(BinaryReader reader) {
             ODocument document = null;
 
-            short classId = reader.ReadInt16EndianAware();
+            var classId = reader.ReadInt16EndianAware();
 
             if (classId == -2) // NULL
             {
-            }
-            else if (classId == -3) // record id
+            } else if (classId == -3) // record id
             {
-                ORID orid = new ORID();
+                var orid = new ORID();
                 orid.ClusterId = reader.ReadInt16EndianAware();
                 orid.ClusterPosition = reader.ReadInt64EndianAware();
 
                 document = new ODocument();
                 document.ORID = orid;
                 document.OClassId = classId;
-            }
-            else
-            {
-                ORecordType type = (ORecordType)reader.ReadByte();
+            } else {
+                var type = (ORecordType)reader.ReadByte();
 
-                ORID orid = new ORID();
+                var orid = new ORID();
                 orid.ClusterId = reader.ReadInt16EndianAware();
                 orid.ClusterPosition = reader.ReadInt64EndianAware();
-                int version = reader.ReadInt32EndianAware();
-                int recordLength = reader.ReadInt32EndianAware();
-                byte[] rawRecord = reader.ReadBytes(recordLength);
+                var version = reader.ReadInt32EndianAware();
+                var recordLength = reader.ReadInt32EndianAware();
+                var rawRecord = reader.ReadBytes(recordLength);
                 document = RecordSerializer.Deserialize(orid, version, type, classId, rawRecord);
             }
 

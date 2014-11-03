@@ -4,33 +4,29 @@ namespace Orient.Client.Protocol.Operations.Command
 {
     internal class CommandPayloadScript : CommandPayloadCommand
     {
-        public CommandPayloadScript()
-        {
+        public CommandPayloadScript() {
             ClassName = "s";
         }
+
         private string _language;
-        internal string Language
-        {
+
+        internal string Language {
             get { return _language; }
-            set
-            {
-                if (value.ToLowerInvariant() == "gremlin")
-                {
+            set {
+                if (value.ToLowerInvariant() == "gremlin") {
                     ClassName = "com.orientechnologies.orient.graph.gremlin.OCommandGremlin";
                 }
-                else
-                {
+                else {
                     ClassName = "s";
                 }
                 _language = value;
             }
         }
-        internal new int PayLoadLength
-        {
-            get
-            {
+
+        internal new int PayLoadLength {
+            get {
                 var res = base.PayLoadLength;
-                return (Language == "gremlin") ? res : res + sizeof(int) + BinarySerializer.Length(Language);
+                return (Language == "gremlin") ? res : res + sizeof (int) + BinarySerializer.Length(Language);
             }
         }
 

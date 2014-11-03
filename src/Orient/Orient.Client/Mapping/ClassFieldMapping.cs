@@ -1,5 +1,5 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Mapping
 {
@@ -9,17 +9,17 @@ namespace Orient.Client.Mapping
         {
         }
 
-        public override void MapToObject(ODocument document, TTarget typedObject)
+        protected override void MapToObject(ODocument document, TTarget typedObject)
         {
-            TProperty result = new TProperty();
-            TypeMapper<TProperty>.Instance.ToObject(document.GetField<ODocument>(_fieldPath), result);
+            var result = new TProperty();
+            TypeMapper<TProperty>.Instance.ToObject(document.GetField<ODocument>(FieldPath), result);
             SetPropertyValue(typedObject, result);
         }
 
-        public override void MapToDocument(TTarget typedObject, ODocument document)
+        protected override void MapToDocument(TTarget typedObject, ODocument document)
         {
             var subDoc = TypeMapper<TProperty>.Instance.ToDocument(GetPropertyValue(typedObject));
-            document.SetField(_fieldPath, subDoc);
+            document.SetField(FieldPath, subDoc);
         }
     }
 }

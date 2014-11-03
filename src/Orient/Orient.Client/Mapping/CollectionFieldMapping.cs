@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Mapping
 {
@@ -8,40 +11,34 @@ namespace Orient.Client.Mapping
     {
         private readonly Func<object> _listFactory;
 
-        public ListNamedFieldMapping(PropertyInfo propertyInfo, string fieldPath) : base(propertyInfo, fieldPath)
-        {
-            _listFactory = FastConstructor.BuildConstructor(_propertyInfo.PropertyType);
+        public ListNamedFieldMapping(PropertyInfo propertyInfo, string fieldPath) : base(propertyInfo, fieldPath) {
+            _listFactory = FastConstructor.BuildConstructor(PropertyInfo.PropertyType);
         }
 
-        protected override object CreateCollectionInstance(int collectionSize)
-        {
+        protected override object CreateCollectionInstance(int collectionSize) {
             return _listFactory();
         }
 
-        protected override void AddItemToCollection(object collection, int index, object item)
-        {
-            ((IList) collection).Add(item);
+        protected override void AddItemToCollection(object collection, int index, object item)  {
+            ((IList)collection).Add(item);
         }
     }
 
     internal class ArrayNamedFieldMapping<TTarget> : CollectionNamedFieldMapping<TTarget>
     {
-        private Func<int, object> _arrayFactory;
+        private readonly Func<int, object> _arrayFactory;
 
         public ArrayNamedFieldMapping(PropertyInfo propertyInfo, string fieldPath)
-            : base(propertyInfo, fieldPath)
-        {
+            : base(propertyInfo, fieldPath) {
             _arrayFactory = FastConstructor.BuildConstructor<int>(propertyInfo.PropertyType);
         }
 
 
-        protected override object CreateCollectionInstance(int collectionSize)
-        {
-            return  _arrayFactory(collectionSize);
+        protected override object CreateCollectionInstance(int collectionSize) {
+            return _arrayFactory(collectionSize);
         }
 
-        protected override void AddItemToCollection(object collection, int index, object item)
-        {
+        protected override void AddItemToCollection(object collection, int index, object item) {
             ((IList)collection)[index] = item;
         }
     }

@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Orient.Client.API.Types;
 using Orient.Client.Protocol;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
     public class OCommandResult
     {
-        private ODocument _document;
+        private readonly ODocument _document;
 
         internal OCommandResult(ODocument document)
         {
@@ -24,8 +25,6 @@ namespace Orient.Client
                     break;
                 case PayloadStatus.RecordCollection:
                     document = _document.GetField<List<ODocument>>("Content").FirstOrDefault();
-                    break;
-                default:
                     break;
             }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
+using Orient.Client.API.Types;
 
 namespace Orient.Client.Transactions
 {
@@ -12,7 +13,7 @@ namespace Orient.Client.Transactions
 
         public override void Update(object oTarget, Dictionary<ORID, ORID> mappings)
         {
-            ORID orid = GetValue(oTarget);
+            var orid = GetValue(oTarget);
             if (orid == null)
                 return;
             ORID replacement;

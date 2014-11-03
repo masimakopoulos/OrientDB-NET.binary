@@ -1,69 +1,68 @@
-﻿using Orient.Client.Protocol;
+﻿using Orient.Client.API.Exceptions;
+using Orient.Client.API.Types;
+using Orient.Client.Protocol;
 using Orient.Client.Protocol.Operations;
 using Orient.Client.Protocol.Operations.Command;
+using Orient.Client.Protocol.Query;
 
-namespace Orient.Client
+namespace Orient.Client.API.Query
 {
     public class OSqlCreateProperty
     {
-        private SqlQuery _sqlQuery = new SqlQuery();
-        private Connection _connection;
+        private readonly SqlQuery _sqlQuery = new SqlQuery();
+        private readonly Connection _connection;
         private string _propertyName;
         private string _class;
         private OType _type;
 
-        public OSqlCreateProperty()
-        {
+        public OSqlCreateProperty() {
         }
 
-        internal OSqlCreateProperty(Connection connection)
-        {
+        internal OSqlCreateProperty(Connection connection) {
             _connection = connection;
         }
-        public OSqlCreateProperty Property(string propertyName, OType type)
-        {
+
+        public OSqlCreateProperty Property(string propertyName, OType type) {
             _propertyName = propertyName;
             _type = type;
             _sqlQuery.Property(_propertyName, _type);
             return this;
         }
-        public short Run()
-        {
+
+        public short Run() {
             if (string.IsNullOrEmpty(_class))
                 throw new OException(OExceptionType.Query, "Class is empty");
 
-            CommandPayloadCommand payload = new CommandPayloadCommand();
-            payload.Text = ToString();
+            var payload = new CommandPayloadCommand {
+                Text = ToString()
+            };
 
-            Command operation = new Command();
-            operation.OperationMode = OperationMode.Synchronous;
-            operation.CommandPayload = payload;
+            var operation = new Command {
+                OperationMode = OperationMode.Synchronous,
+                CommandPayload = payload
+            };
 
-            OCommandResult result = new OCommandResult(_connection.ExecuteOperation(operation));
+            var result = new OCommandResult(_connection.ExecuteOperation(operation));
 
             return short.Parse(result.ToDocument().GetField<string>("Content"));
         }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return _sqlQuery.ToString(QueryType.CreateProperty);
         }
 
-        public OSqlCreateProperty Class(string @class)
-        {
+        public OSqlCreateProperty Class(string @class) {
             _class = @class;
             _sqlQuery.Class(_class);
             return this;
         }
 
-        public OSqlCreateProperty LinkedType(OType type)
-        {
+        public OSqlCreateProperty LinkedType(OType type) {
             _sqlQuery.LinkedType(type);
             return this;
         }
 
-        public OSqlCreateProperty LinkedClass(string @class)
-        {
+        public OSqlCreateProperty LinkedClass(string @class) {
             _sqlQuery.LinkedClass(@class);
             return this;
         }

@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Orient.Client.Protocol.Serializers;
+﻿using Orient.Client.API.Types;
 
 namespace Orient.Client.Protocol.Operations
 {
-    internal class DBCountRecords : IOperation
+    internal class DbCountRecords : IOperation
     {
         public Request Request(int sessionID)
         {
-            Request request = new Request();
-            request.OperationMode = OperationMode.Synchronous;
+            var request = new Request {OperationMode = OperationMode.Synchronous};
 
             // standard request fields
             request.AddDataItem((byte)OperationType.DB_COUNTRECORDS);
@@ -22,7 +17,7 @@ namespace Orient.Client.Protocol.Operations
 
         public ODocument Response(Response response)
         {
-            ODocument document = new ODocument();
+            var document = new ODocument();
             if (response == null)
             {
                 return document;
@@ -30,7 +25,7 @@ namespace Orient.Client.Protocol.Operations
 
             var reader = response.Reader;
             var size = reader.ReadInt64EndianAware();
-            document.SetField<long>("count", size);
+            document.SetField("Count", size);
 
             return document;
         }
